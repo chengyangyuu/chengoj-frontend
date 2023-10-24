@@ -5,7 +5,6 @@ import { UserControllerService } from "../../generated";
 export default {
   namespaced: true,
   state: () => ({
-    namespaced: true,
     loginUser: {
       userName: "未登录",
     },
@@ -25,7 +24,7 @@ export default {
     },
   },
   mutations: {
-    increment(state, payload) {
+    updateUser(state, payload) {
       state.loginUser = payload;
     },
   },

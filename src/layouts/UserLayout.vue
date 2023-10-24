@@ -1,8 +1,11 @@
 <template>
-  <div id="basicLayout">
+  <div id="userLayout">
     <a-layout style="min-height: 100vh">
       <a-layout-header class="header">
-        <global-header />
+        <a-space>
+          <img src="../assets/oj-logo.svg" class="logo" />
+          <div>橙 OJ</div>
+        </a-space>
       </a-layout-header>
       <a-layout-content class="content">
         <router-view />
@@ -15,22 +18,26 @@
 </template>
 
 <style scoped>
-#basicLayout {
+#userLayout {
+  text-align: center;
+  background: url("../assets/greenn.png") 0% 0% / 100% 100%;
 }
 
-#basicLayout .header {
+#userLayout .logo {
+  width: 64px;
+  height: 64px;
+}
+
+#userLayout .header {
   margin-bottom: 16px;
-  box-shadow: #eee 1px 1px 5px;
 }
 
-#basicLayout .content {
-  background: linear-gradient(to right, #bbb, #fff);
+#userLayout .content {
   margin-bottom: 16px;
   padding: 20px;
 }
 
-#basicLayout .footer {
-  background: #ffb6c1;
+#userLayout .footer {
   padding: 16px;
   position: sticky;
   bottom: 0;
@@ -39,10 +46,4 @@
   text-align: center;
 }
 </style>
-<script>
-import GlobalHeader from "@/components/GlobalHeader";
-
-export default {
-  components: { GlobalHeader },
-};
-</script>
+<script></script>

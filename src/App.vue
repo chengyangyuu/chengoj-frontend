@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <BasicLayout></BasicLayout>
+    <template v-if="route.path.startsWith('/user')">
+      <router-view />
+    </template>
+    <BasicLayout />
   </div>
 </template>
 
@@ -9,10 +12,11 @@
 }
 </style>
 <script setup lang="ts">
-import BasicLayout from "@/layouts/BasicLayout";
-import { useRouter } from "vue-router";
-import { useStore } from "vuex";
+import BasicLayout from "@/layouts/BasicLayout.vue";
 import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+//获取一下路由
+const route = useRoute();
 
 //全局的初始化函数,有全局单词调用的代码
 const doInit = () => {
@@ -21,18 +25,5 @@ const doInit = () => {
 //在来个全局的钩子函数
 onMounted(() => {
   doInit();
-});
-
-const router = useRouter();
-const store = useStore();
-
-router.beforeEach((to, from, next) => {
-  if (to.meta?.access === "admin") {
-    if (store.state.user.loginUser?.role !== "admin") {
-      next("/noAuth");
-      return;
-    }
-  }
-  next();
 });
 </script>
