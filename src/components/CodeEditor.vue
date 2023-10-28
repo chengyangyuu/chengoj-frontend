@@ -3,12 +3,30 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, toRaw } from "vue";
+import { defineProps, onMounted, ref, toRaw, withDefaults } from "vue";
 import * as monaco from "monaco-editor";
 
 const codeEditorRef = ref();
 const codeEditor = ref();
 const value = ref("hello world");
+
+/**
+ * 让父级处理值
+ */
+interface Props {
+  value: string;
+  handleChange: (v: string) => void;
+}
+
+/**
+ * 给组件赋予初始值
+ */
+const props = withDefaults(defineProps<Props>(), {
+  value: () => "",
+  handleChange: (v: string) => {
+    console.log(v);
+  },
+});
 
 const fillValue = () => {
   if (!codeEditor.value) {
@@ -21,8 +39,8 @@ onMounted(() => {
   if (!codeEditorRef.value) {
     return;
   }
-  codeEditorRef.value = monaco.editor.create(codeEditorRef.value, {
-    value: value.value,
+  codeEditor.value = monaco.editor.create(codeEditorRef.value, {
+    value: props.value,
     language: "java",
     automaticLayout: true,
     colorDecorators: true,
@@ -33,7 +51,7 @@ onMounted(() => {
     theme: "vs-dark",
   });
   codeEditor.value.onDidChangeModelContent(() => {
-    console.log("目前内容为:", toRaw(codeEditor.value).getValue());
+    props.handleChange(toRaw(codeEditor.value).getValue());
   });
 });
 </script>
