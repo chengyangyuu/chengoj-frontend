@@ -1,10 +1,20 @@
 <template>
   <div id="manageQuestionView">
-    <a-table :columns="columns" :data="dataList">
+    <a-table
+      :columns="columns"
+      :data="dataList"
+      :pagination="{
+        showTotal: true,
+        pageSize: searchParams.pageSize,
+        pageNum: searchParams.pageNum,
+        total,
+      }"
+    >
       <template #optional="{ record }">
-        <a-button @click="$modal.info({ title: 'Name', content: record.name })"
-          >view
-        </a-button>
+        <a-space>
+          <a-button type="primary" @click="doUpdate(record)">修改</a-button>
+          <a-button status="danger" @click="doDelete(record)">删除</a-button>
+        </a-space>
       </template>
     </a-table>
   </div>
@@ -12,8 +22,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { QuestionControllerService } from "../../../generated";
+import { Question, QuestionControllerService } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
+import { useRoute, useRouter } from "vue-router";
 
 const show = ref(true);
 
@@ -25,7 +36,9 @@ const searchParams = ref({
   pageSize: 10,
   pageNum: 1,
 });
-
+/**
+ * 获取page
+ */
 const loadData = async () => {
   const res = await QuestionControllerService.listQuestionByPageUsingPost(
     searchParams.value
@@ -37,6 +50,33 @@ const loadData = async () => {
     message.error("加载失败 ", res.message);
   }
 };
+/**
+ * 修改
+ */
+const doUpdate = (question: Question) => {
+  router.push({
+    path: "update/question",
+    query: {
+      id: question.id,
+    },
+  });
+};
+/**
+ * 删除
+ */
+const doDelete = async (question: Question) => {
+  const res = await QuestionControllerService.deleteQuestionUsingPost({
+    id: question.id,
+  });
+  if (res.code === 0) {
+    message.success("删除成功");
+    loadData();
+  } else {
+    message.error("删除失败");
+  }
+};
+
+const router = useRouter();
 
 /**
  * 界面加载时  请求数据
