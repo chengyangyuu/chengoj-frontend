@@ -1,12 +1,13 @@
 import { RouteRecordRaw } from "vue-router";
 import HomeView from "../views/ExampleView.vue";
 import NoAuthView from "../views/NoAuthView.vue";
-import AboutView from "../views/AboutView.vue";
 import UserLayout from "../layouts/UserLayout.vue";
 import UserLoginView from "../views/user/UserLoginView.vue";
 import UserRegisterView from "../views/user/UserRegisterView.vue";
 import AddQuestionView from "../views/question/AddQuestionView.vue";
 import ManageQuestionView from "../views/question/ManageQuestionView.vue";
+import QuestionView from "../views/question/QuestionView.vue";
+import ViewQuestionView from "../views/question/ViewQuestionView.vue";
 import ACCESS_ENUM from "@/access/ACCESS_ENUM";
 
 export const routes: Array<RouteRecordRaw> = [
@@ -31,6 +32,19 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/questions",
+    name: "浏览题目",
+    component: QuestionView,
+  },
+  {
+    path: "/view/question/:id",
+    name: "在线做题",
+    component: ViewQuestionView,
+    meta: {
+      access: ACCESS_ENUM.ADMIN,
+    },
+  },
+  {
     path: "/add/question",
     name: "创建题目",
     component: AddQuestionView,
@@ -44,25 +58,30 @@ export const routes: Array<RouteRecordRaw> = [
     component: AddQuestionView,
     meta: {
       access: ACCESS_ENUM.ADMIN,
+      hideInMenu: true,
     },
   },
   {
     path: "/manage/question",
     name: "管理题目",
     component: ManageQuestionView,
-    // meta: {
-    //   access: ACCESS_ENUM.ADMIN,
-    // },
+    meta: {
+      access: ACCESS_ENUM.ADMIN,
+    },
   },
+
   {
     path: "/",
-    name: "浏览题目",
+    name: "主页",
     component: HomeView,
   },
   {
     path: "/noAuth",
     name: "无权限 ",
     component: NoAuthView,
+    meta: {
+      hideInMenu: true,
+    },
   },
   {
     path: "/hide",
@@ -72,12 +91,13 @@ export const routes: Array<RouteRecordRaw> = [
       hideInMenu: true,
     },
   },
-  {
-    path: "/about",
-    name: "管理员可见",
-    component: AboutView,
-    meta: {
-      access: ACCESS_ENUM.ADMIN,
-    },
-  },
+  // {
+  //   path: "/about",
+  //   name: "管理员可见",
+  //   component: AboutView,
+  //   meta: {
+  //     access: ACCESS_ENUM.ADMIN,
+  //     hideInMenu: true,
+  //   },
+  // },
 ];

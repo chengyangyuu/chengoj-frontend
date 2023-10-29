@@ -6,9 +6,10 @@
       :pagination="{
         showTotal: true,
         pageSize: searchParams.pageSize,
-        pageNum: searchParams.pageNum,
+        current: searchParams.current,
         total,
       }"
+      @page-change="onPageChange"
     >
       <template #optional="{ record }">
         <a-space>
@@ -21,10 +22,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import { Question, QuestionControllerService } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 
 const show = ref(true);
 
@@ -34,8 +35,9 @@ const total = ref(0);
 
 const searchParams = ref({
   pageSize: 10,
-  pageNum: 1,
+  current: 1,
 });
+
 /**
  * 获取page
  */
@@ -50,33 +52,13 @@ const loadData = async () => {
     message.error("加载失败 ", res.message);
   }
 };
-/**
- * 修改
- */
-const doUpdate = (question: Question) => {
-  router.push({
-    path: "update/question",
-    query: {
-      id: question.id,
-    },
-  });
-};
-/**
- * 删除
- */
-const doDelete = async (question: Question) => {
-  const res = await QuestionControllerService.deleteQuestionUsingPost({
-    id: question.id,
-  });
-  if (res.code === 0) {
-    message.success("删除成功");
-    loadData();
-  } else {
-    message.error("删除失败");
-  }
-};
 
-const router = useRouter();
+/**
+ * 钩子函数 监听变量改变 就重执行这个函数
+ */
+watchEffect(() => {
+  loadData();
+});
 
 /**
  * 界面加载时  请求数据
@@ -84,6 +66,7 @@ const router = useRouter();
 onMounted(() => {
   loadData();
 });
+
 // {id: "1717400819274326020", title: "来挑战", content: "输出港澳台", tags: "["栈","简单"]", answer: "2
 const columns = [
   {
@@ -135,6 +118,44 @@ const columns = [
     slotName: "optional",
   },
 ];
+
+/**
+ * 点击分页 要做的事
+ */
+const onPageChange = (page: number) => {
+  searchParams.value = {
+    ...searchParams.value,
+    current: page,
+  };
+};
+
+const router = useRouter();
+
+/**
+ * 修改
+ */
+const doUpdate = (question: Question) => {
+  router.push({
+    path: "update/question",
+    query: {
+      id: question.id,
+    },
+  });
+};
+/**
+ * 删除
+ */
+const doDelete = async (question: Question) => {
+  const res = await QuestionControllerService.deleteQuestionUsingPost({
+    id: question.id,
+  });
+  if (res.code === 0) {
+    message.success("删除成功");
+    loadData();
+  } else {
+    message.error("删除失败");
+  }
+};
 </script>
 
 <style scoped>
