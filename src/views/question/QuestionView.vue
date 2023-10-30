@@ -91,7 +91,7 @@ const loadData = async () => {
     dataList.value = res.data.records;
     total.value = res.data.total;
   } else {
-    message.error("加载失败 ", res.message);
+    message.error("加载失败 " + res.message);
   }
 };
 

@@ -40,8 +40,10 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/view/question/:id",
     name: "在线做题",
     component: ViewQuestionView,
+    props: true,
     meta: {
       access: ACCESS_ENUM.ADMIN,
+      hideInMenu: true,
     },
   },
   {

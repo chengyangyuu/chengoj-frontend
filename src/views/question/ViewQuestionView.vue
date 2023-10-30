@@ -1,107 +1,133 @@
 <template>
-  <div id="questionView">
-    <a-form :model="searchParams" layout="inline">
-      <a-form-item field="title" label="名称" style="min-width: 240px">
-        <a-input v-model="searchParams.title" placeholder="清输入题目名称" />
-      </a-form-item>
-      <a-form-item field="tags" label="标签" style="min-width: 240px">
-        <a-input v-model="searchParams.tags" placeholder="请输入题目标签" />
-      </a-form-item>
-      <a-form-item>
-        <a-button type="primary" @click="doSubmit">提交</a-button>
-      </a-form-item>
-    </a-form>
-    <a-divider size="0" />
-    <a-table
-      :ref="tableRef"
-      :columns="columns"
-      :data="dataList"
-      :pagination="{
-        showTotal: true,
-        pageSize: searchParams.pageSize,
-        current: searchParams.current,
-        total,
-      }"
-      @page-change="onPageChange"
-    >
-      <template #tags="{ record }">
-        <a-space wrap>
-          <a-tag v-for="(tag, index) of record.tags" :key="index" color="green"
-            >{{ tag }}
-          </a-tag>
-        </a-space>
-      </template>
-
-      <template #acceptedRate="{ record }">
-        {{
-          `${
-            record.submitNum
-              ? (record.acceptedNum / record.submitNum) * 100
-              : "0"
-          }%  (${record.acceptedNum}/${record.submitNum})`
-        }}
-      </template>
-
-      <template #createTime="{ record }">
-        {{ moment(record.createTime).format("YYYY-MM-DD") }}
-      </template>
-      <template #optional="{ record }">
-        <a-space>
-          <a-button type="primary" @click="toQuestionPage(record)"
-            >去做题
-          </a-button>
-        </a-space>
-      </template>
-    </a-table>
+  <div id="viewQuestionView">
+    <a-row :gutter="[24, 24]">
+      <a-col :md="12" :xs="24">
+        <a-tabs default-active-key="question">
+          <a-tab-pane key="question" title="题目">
+            <a-card v-if="question" :title="question.title">
+              <a-descriptions
+                title="判题条件"
+                :column="{ xs: 1, md: 3, lg: 4 }"
+              >
+                <a-descriptions-item label="时间限制">
+                  {{ question.judgeConfig.timeLimit ?? 0 }}
+                </a-descriptions-item>
+                <a-descriptions-item label="内存限制">
+                  {{ question.judgeConfig.memoryLimit ?? 0 }}
+                </a-descriptions-item>
+                <a-descriptions-item label="堆栈限制">
+                  {{ question.judgeConfig.stackLimit ?? 0 }}
+                </a-descriptions-item>
+              </a-descriptions>
+              <MdViewer :value="question.content || ''"></MdViewer>
+              <template #extra>
+                <a-tag
+                  v-for="(tag, index) of question.tags"
+                  :key="index"
+                  color="green"
+                  >{{ tag }}
+                </a-tag>
+              </template>
+            </a-card>
+          </a-tab-pane>
+          <a-tab-pane key="comment" title="评论" disabled> 评论区</a-tab-pane>
+          <a-tab-pane key="answer" title="答案"> 暂时无法查看答案</a-tab-pane>
+        </a-tabs>
+      </a-col>
+      <a-col :md="12" :xs="24">
+        <a-form :model="form" layout="inline">
+          <a-form-item
+            field="language"
+            label="编程语言"
+            style="min-width: 240px"
+          >
+            <a-select
+              v-model="form.language"
+              :style="{ width: '320px' }"
+              placeholder="选择编程语言"
+            >
+              <a-option>go</a-option>
+              <a-option>cpp</a-option>
+              <a-option>java</a-option>
+            </a-select>
+          </a-form-item>
+        </a-form>
+        <CodeEditor
+          :value="form.code"
+          :language="form.language"
+          :handle-change="changeCode"
+        />
+        <a-divider size="0" />
+        <a-button type="primary" style="min-width: 200px" @click="doSubmit">
+          提交代码
+        </a-button>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, withDefaults, defineProps } from "vue";
 import {
-  Question,
   QuestionControllerService,
-  QuestionQueryRequest,
+  QuestionSubmitAddRequest,
+  QuestionSubmitControllerService,
+  QuestionVO,
 } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
-import { useRouter } from "vue-router";
-import moment from "moment";
-
-const tableRef = ref();
-
-const dataList = ref([]);
-
-const total = ref(0);
-
-const searchParams = ref<QuestionQueryRequest>({
-  title: "",
-  tags: [],
-  pageSize: 10,
-  current: 1,
-});
+import CodeEditor from "@/components/CodeEditor.vue";
+import MdViewer from "@/components/MdViewer.vue";
 
 /**
- * 获取page
+ * 获取到 界面这个属性
+ */
+interface Props {
+  id: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  id: () => "",
+});
+
+const question = ref<QuestionVO>();
+/**
+ * 根据id获取 vo
  */
 const loadData = async () => {
-  const res = await QuestionControllerService.listQuestionVoByPageUsingPost(
-    searchParams.value
+  const res = await QuestionControllerService.getQuestionVoByIdUsingGet(
+    props.id as any
   );
   if (res.code === 0) {
-    dataList.value = res.data.records;
-    total.value = res.data.total;
+    question.value = res.data;
   } else {
-    message.error("加载失败 ", res.message);
+    message.error("加载失败 " + res.message);
   }
 };
-
 /**
- * 钩子函数 监听变量改变 就重执行这个函数
+ * 定义提交参数
  */
-watchEffect(() => {
-  loadData();
+const form = ref<QuestionSubmitAddRequest>({
+  language: "java",
+  code: "",
 });
 
+/**
+ * 提交代码编辑器的函数
+ */
+const doSubmit = async () => {
+  if (!question.value?.id) {
+    return;
+  }
+  const res = await QuestionSubmitControllerService.doQuestionSubmitUsingPost({
+    ...form.value,
+    questionId: question.value.id,
+  });
+  if (res.code === 0) {
+    message.success("提交成功");
+  } else {
+    message.error("提交失败" + res.message);
+  }
+};
 /**
  * 界面加载时  请求数据
  */
@@ -109,69 +135,14 @@ onMounted(() => {
   loadData();
 });
 
-// {id: "1717400819274326020", title: "来挑战", content: "输出港澳台", tags: "["栈","简单"]", answer: "2
-const columns = [
-  {
-    title: "题号",
-    dataIndex: "id",
-  },
-  {
-    title: "题目名称",
-    dataIndex: "title",
-  },
-  {
-    title: "标签",
-    slotName: "tags",
-  },
-  {
-    title: "通过率",
-    slotName: "acceptedRate",
-  },
-  {
-    title: "创建时间",
-    slotName: "createTime",
-  },
-  {
-    slotName: "optional",
-  },
-];
-
-/**
- * 点击分页 要做的事
- */
-const onPageChange = (page: number) => {
-  searchParams.value = {
-    ...searchParams.value,
-    current: page,
-  };
-};
-
-const router = useRouter();
-
-/**
- * 跳转到做哪道题的界面
- */
-const toQuestionPage = (question: Question) => {
-  router.push({
-    path: `/view/question/${question.id}`,
-  });
-};
-
-/**
- * 确认搜索
- * 重置 搜索页号
- */
-const doSubmit = () => {
-  searchParams.value = {
-    ...searchParams.value,
-    current: 1,
-  };
+const changeCode = (value: string) => {
+  form.value.code = value;
 };
 </script>
 
 <style scoped>
-#questionView {
-  max-width: 1280px;
+#viewQuestionView {
+  max-width: 1400px;
   margin: 0 auto;
 }
 </style>
