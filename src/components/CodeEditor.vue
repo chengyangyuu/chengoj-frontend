@@ -45,23 +45,21 @@ const props = withDefaults(defineProps<Props>(), {
 /**
  * 语言改变要初始化一下
  */
+/**
+ * 监听属性 动态改变language的值
+ */
 watch(
   () => props.language,
   () => {
-    codeEditor.value = monaco.editor.create(codeEditorRef.value, {
-      value: props.value,
-      language: props.language,
-      automaticLayout: true,
-      colorDecorators: true,
-      minimap: {
-        enabled: true,
-      },
-      readOnly: false,
-      theme: "vs-dark",
-    });
+    if (codeEditor.value) {
+      monaco.editor.setModelLanguage(
+        toRaw(codeEditor.value).getModel(),
+        props.language
+      );
+    }
   }
 );
-//todo 切换代码 加载失败
+
 
 onMounted(() => {
   if (!codeEditorRef.value) {
