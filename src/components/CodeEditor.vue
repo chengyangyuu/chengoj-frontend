@@ -60,7 +60,6 @@ watch(
   }
 );
 
-
 onMounted(() => {
   if (!codeEditorRef.value) {
     return;

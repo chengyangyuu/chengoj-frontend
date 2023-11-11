@@ -1,5 +1,7 @@
 # chengoj-frontend
-
+#npm install openapi-typescript-codegen --save-dev
+#openapi --input http://localhost:8109/api//v2/api-docs --output ./generated --client axios
+#update WITH_CREDENTIALS false->true  (allow cookie)
 ## Project setup
 ```
 npm install
